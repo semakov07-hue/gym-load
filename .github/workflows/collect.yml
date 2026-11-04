@@ -2,7 +2,7 @@ name: collect
 
 on:
   schedule:
-    - cron: "*/3,13,23,33,43,53 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,13 @@ jobs:
         env:
           FITNESS_TOKEN: ${{ secrets.FITNESS_TOKEN }}
           GYM_TZ: Asia/Yekaterinburg
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Пусто = писать при каждом замере (для проверки). Число (например "40") =
+          # писать один раз, когда людей стало не больше этого числа.
+          NOTIFY_BELOW: ""
+          # Часы работы зала, в которые разрешены уведомления (включительно)
+          NOTIFY_HOURS: "7-23"
 
       - name: Save data
         run: |
