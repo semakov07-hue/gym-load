@@ -1,0 +1,44 @@
+name: reports
+
+on:
+  schedule:
+    # Утренний прогноз: каждый день в 03:07 UTC = 08:07 по Екатеринбургу
+    - cron: "7 3 * * *"
+    # Недельный отчёт: воскресенье 15:07 UTC = 20:07 по Екатеринбургу
+    - cron: "7 15 * * 0"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Какой отчёт прислать"
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - weekly
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests pandas matplotlib holidays
+
+      - name: Send report
+        run: python report.py "$MODE"
+        env:
+          MODE: "${{ github.event.inputs.mode || (github.event.schedule == '7 15 * * 0' && 'weekly' || 'morning') }}"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GYM_TZ: Asia/Yekaterinburg
+          # Ваши свободные часы. Дни: 0=пн ... 6=вс. Часы включительно.
+          # "0-4:18-22" = пн-пт с 18:00 до 23:00; "5-6:10-16" = сб-вс с 10:00 до 17:00.
+          # Пусто = не учитывать, брать любые рабочие часы зала.
+          FREE_HOURS: "0-4:18-22,5-6:10-16"
